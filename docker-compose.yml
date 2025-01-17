@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  service-a:
+    build:
+      context: ./service-a
+      target: builder
+    command: pnpm start:dev
+    ports:
+      - "3100:3100"
+    environment:
+      - PORT=3100
+      - MONGODB_URI=mongodb://mongodb:27017/books
+      - REDIS_URI=redis://redis:6379
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+    volumes:
+      - ./service-a:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+
+  service-b:
+    build:
+      context: ./service-b
+      target: builder
+    command: pnpm start:dev
+    ports:
+      - "3200:3200"
+    environment:
+      - PORT=3200
+      - MONGODB_URI=mongodb://mongodb:27017/books-logs
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+    volumes:
+      - ./service-b:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redislabs/redistimeseries:edge
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --loadmodule /usr/lib/redis/modules/redistimeseries.so
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  default:
+    name: app-network 

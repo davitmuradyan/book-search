@@ -1,0 +1,13 @@
+{
+  "name": "book-search-platform",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:dev": "docker compose up --build service-a service-b",
+    "start:a": "cd service-a && pnpm start:dev",
+    "start:b": "cd service-b && pnpm start:dev",
+    "install:all": "pnpm install && cd service-a && pnpm install && cd ../service-b && pnpm install",
+    "build": "cd service-a && pnpm build && cd ../service-b && pnpm build",
+    "test": "cd service-a && pnpm test && cd ../service-b && pnpm test"
+  }
+} 

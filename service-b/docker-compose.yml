@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  service-b:
+    build:
+      context: .
+      target: builder
+    command: pnpm start:dev
+    ports:
+      - "3200:3200"
+    environment:
+      - PORT=3200
+      - MONGODB_URI=mongodb://mongodb:27017/books-logs
+      - RABBITMQ_URI=amqp://rabbitmq:5672
+    volumes:
+      - .:/app
+      # - /app/node_modules
+    networks:
+      - service-a_app-network
+
+networks:
+  service-a_app-network:
+    external: true 
