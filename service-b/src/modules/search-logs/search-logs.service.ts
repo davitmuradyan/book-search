@@ -1,17 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { SearchLog, SearchLogDocument } from './schemas/search-log.schema';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { MongoClient, Collection } from 'mongodb';
+import { SearchLog } from './schemas/search-log.schema';
 import { GetLogsDto, LogsResponse } from './dto/get-logs.dto';
 
 @Injectable()
 export class SearchLogsService {
   private readonly logger = new Logger(SearchLogsService.name);
+  private readonly searchLogsCollection: Collection<SearchLog>;
 
   constructor(
-    @InjectModel(SearchLog.name)
-    private searchLogModel: Model<SearchLogDocument>,
-  ) {}
+    @Inject('MONGODB_CONNECTION') private readonly mongoClient: MongoClient,
+  ) {
+    this.searchLogsCollection = this.mongoClient.db().collection<SearchLog>('searchLogs');
+  }
 
   async getLogs(params: GetLogsDto): Promise<LogsResponse> {
     const { startDate, endDate, operation, page = 1, limit = 20 } = params;
@@ -36,14 +37,13 @@ export class SearchLogsService {
       const skip = (page - 1) * limit;
 
       const [results, total] = await Promise.all([
-        this.searchLogModel
+        this.searchLogsCollection
           .find(query)
           .sort({ timestamp: -1 })
           .skip(skip)
           .limit(limit)
-          .lean()
-          .exec(),
-        this.searchLogModel.countDocuments(query),
+          .toArray(),
+        this.searchLogsCollection.countDocuments(query),
       ]);
 
       return {
@@ -61,8 +61,10 @@ export class SearchLogsService {
 
   async logSearchEvent(event: any) {
     try {
-      const searchLog = new this.searchLogModel(event);
-      await searchLog.save();
+      await this.searchLogsCollection.insertOne({
+        ...event,
+        timestamp: new Date(),
+      });
       this.logger.log(
         `Logged search event: ${event.operation} - ${event.query}`,
       );

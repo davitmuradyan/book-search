@@ -1,19 +1,21 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { BooksController } from './books.controller';
-import { BooksService } from './books.service';
-import { BooksEventsService } from './books-events.service';
-import { BooksMetricsService } from './books-metrics.service';
+import { CoreModule } from '../../core/core.module';
+import { BooksController } from './controllers/books.controller';
+import { BooksService } from './services/books.service';
+import { BooksRepository } from './repositories/books.repository';
+import { BooksCacheService } from './services/books-cache.service';
+import { BooksEventsService } from './services/books-events.service';
+import { BooksMetricsService } from './services/books-metrics.service';
 import { MetricsController } from './metrics.controller';
-import { Book, BookSchema } from './schemas/book.schema';
+import { MongoClient } from 'mongodb';
 
 @Module({
   imports: [
     HttpModule,
-    MongooseModule.forFeature([{ name: Book.name, schema: BookSchema }]),
+    CoreModule,
     ClientsModule.registerAsync([
       {
         name: 'BOOKS_SERVICE',
@@ -21,7 +23,7 @@ import { Book, BookSchema } from './schemas/book.schema';
           transport: Transport.RMQ,
           options: {
             urls: [configService.get<string>('RABBITMQ_URI')],
-            queue: 'books_events_queue',
+            queue: 'books_queue',
             queueOptions: {
               durable: true,
             },
@@ -32,6 +34,25 @@ import { Book, BookSchema } from './schemas/book.schema';
     ]),
   ],
   controllers: [BooksController, MetricsController],
-  providers: [BooksService, BooksEventsService, BooksMetricsService],
+  providers: [
+    BooksService,
+    BooksRepository,
+    BooksCacheService,
+    BooksEventsService,
+    BooksMetricsService,
+    {
+      provide: 'MONGODB_CONNECTION',
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const mongoUri = configService.get<string>('MONGODB_URI');
+        if (!mongoUri) {
+          throw new Error('MONGODB_URI environment variable is not defined');
+        }
+        const client = new MongoClient(mongoUri);
+        await client.connect();
+        return client;
+      },
+    }
+  ],
 })
 export class BooksModule {}

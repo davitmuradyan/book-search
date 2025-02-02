@@ -1,7 +1,16 @@
-export interface IOpenLibraryResponse {
-  docs: IOpenLibraryBook[];
-  numFound: number;
-  start: number;
+import { ObjectId } from 'mongodb';
+
+export interface Book {
+  _id?: ObjectId;
+  title: string;
+  authors: string[];
+  firstPublishYear: number;
+  isbns: string[];
+  publishers: string[];
+  openLibraryId: string;
+  searchKeywords: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface IOpenLibraryBook {
@@ -11,6 +20,18 @@ export interface IOpenLibraryBook {
   first_publish_year?: number;
   isbn?: string[];
   publisher?: string[];
-  language?: string[];
-  number_of_pages?: number;
+}
+
+export interface IOpenLibraryResponse {
+  numFound: number;
+  start: number;
+  docs: IOpenLibraryBook[];
+}
+
+export interface SearchResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pages: number;
+  limit: number;
 }

@@ -1,51 +1,34 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
 
-export type BookDocument = Book & Document;
-
-@Schema({
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
-})
-export class Book {
-  @Prop({ required: true, text: true })
+export interface Book {
+  _id?: ObjectId;
   title: string;
-
-  @Prop({ type: [String], index: true })
   authors: string[];
-
-  @Prop({ index: true })
   firstPublishYear: number;
-
-  @Prop({ type: [String], index: true })
   isbns: string[];
-
-  @Prop({ type: [String] })
   publishers: string[];
-
-  @Prop({ required: true, unique: true, index: true })
   openLibraryId: string;
-
-  @Prop({ type: [String], index: true })
   searchKeywords: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export const BookSchema = SchemaFactory.createForClass(Book);
-
-// Compound indexes for common search patterns
-BookSchema.index({ title: 1, authors: 1 });
-BookSchema.index({ firstPublishYear: 1, title: 1 });
-
-// Text index for full-text search
-BookSchema.index(
+export const bookIndexes = [
+  { key: { title: 1 }, background: true },
+  { key: { authors: 1 }, background: true },
+  { key: { firstPublishYear: 1 }, background: true },
+  { key: { isbns: 1 }, background: true },
+  { key: { openLibraryId: 1 }, unique: true, background: true },
+  { key: { searchKeywords: 1 }, background: true },
+  { key: { title: 1, authors: 1 }, background: true },
+  { key: { firstPublishYear: 1, title: 1 }, background: true },
   {
-    title: 'text',
-    authors: 'text',
-    publishers: 'text',
-    searchKeywords: 'text',
-  },
-  {
+    key: {
+      title: 'text',
+      authors: 'text',
+      publishers: 'text',
+      searchKeywords: 'text',
+    },
     weights: {
       title: 10,
       authors: 5,
@@ -53,5 +36,6 @@ BookSchema.index(
       searchKeywords: 1,
     },
     name: 'BookSearchIndex',
+    background: true,
   },
-);
+];

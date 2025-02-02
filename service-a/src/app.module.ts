@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongoClient } from 'mongodb';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -8,17 +8,20 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BooksModule } from './modules/books/books.module';
 
+const mongoClientProvider = {
+  provide: 'MONGODB_CONNECTION',
+  useFactory: async (configService: ConfigService) => {
+    const client = new MongoClient(configService.get<string>('MONGODB_URI'));
+    await client.connect();
+    return client;
+  },
+  inject: [ConfigService],
+};
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-    }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
-      inject: [ConfigService],
     }),
     CacheModule.registerAsync({
       isGlobal: true,
@@ -51,6 +54,6 @@ import { BooksModule } from './modules/books/books.module';
     BooksModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, mongoClientProvider],
 })
 export class AppModule {}

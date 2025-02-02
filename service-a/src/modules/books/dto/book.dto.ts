@@ -8,35 +8,44 @@ import {
 } from 'class-validator';
 
 export class CreateBookDto {
-  @ApiProperty({ example: 'The Great Gatsby' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: ['F. Scott Fitzgerald'] })
+  @ApiProperty({ type: [String] })
   @IsArray()
+  @IsString({ each: true })
   @IsOptional()
   authors: string[];
 
-  @ApiProperty({ example: 1925 })
+  @ApiProperty()
   @IsNumber()
   @IsOptional()
   firstPublishYear?: number;
 
-  @ApiProperty({ example: ['9780743273565'] })
+  @ApiProperty({ type: [String] })
   @IsArray()
+  @IsString({ each: true })
   @IsOptional()
   isbns?: string[];
 
-  @ApiProperty({ example: ['Scribner'] })
+  @ApiProperty({ type: [String] })
   @IsArray()
+  @IsString({ each: true })
   @IsOptional()
   publishers?: string[];
 
-  @ApiProperty({ example: '/works/OL123M' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   openLibraryId: string;
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  searchKeywords?: string[];
 }
 
 export class SearchQueryDto {
@@ -44,4 +53,33 @@ export class SearchQueryDto {
   @IsString()
   @IsNotEmpty()
   q: string;
+}
+
+export class BookResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  title: string;
+
+  @ApiProperty({ type: [String] })
+  authors: string[];
+
+  @ApiProperty()
+  firstPublishYear: number;
+
+  @ApiProperty({ type: [String] })
+  isbns: string[];
+
+  @ApiProperty({ type: [String] })
+  publishers: string[];
+
+  @ApiProperty()
+  openLibraryId: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
 }

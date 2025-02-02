@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { BooksMetricsService, MetricsResponse } from './books-metrics.service';
+import { BooksMetricsService, MetricsResponse } from './services/books-metrics.service';
 
 @ApiTags('metrics')
 @Controller('metrics')

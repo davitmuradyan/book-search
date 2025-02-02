@@ -8,7 +8,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SearchLog } from '../schemas/search-log.schema';
+import { SearchOperation } from '../schemas/search-log.schema';
 
 export class GetLogsDto {
   @ApiProperty({ required: false })
@@ -24,7 +24,7 @@ export class GetLogsDto {
   @ApiProperty({ required: false, enum: ['EXTERNAL_SEARCH', 'LOCAL_SEARCH'] })
   @IsEnum(['EXTERNAL_SEARCH', 'LOCAL_SEARCH'])
   @IsOptional()
-  operation?: 'EXTERNAL_SEARCH' | 'LOCAL_SEARCH';
+  operation?: SearchOperation;
 
   @ApiProperty({ required: false, minimum: 1, default: 1 })
   @Type(() => Number)
@@ -55,6 +55,6 @@ export class LogsResponse {
   @ApiProperty()
   limit: number;
 
-  @ApiProperty({ type: [SearchLog] })
-  items: SearchLog[];
+  @ApiProperty({ type: 'array', description: 'Array of search logs' })
+  items: any[];
 }

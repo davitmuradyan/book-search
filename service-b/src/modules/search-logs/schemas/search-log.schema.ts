@@ -1,49 +1,24 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { ObjectId } from 'mongodb';
 
-export type SearchLogDocument = SearchLog & Document;
+export type SearchOperation = 'EXTERNAL_SEARCH' | 'LOCAL_SEARCH';
 
-@Schema({
-  timestamps: true,
-  collection: 'search_logs',
-  toJSON: {
-    transform: (_, ret) => {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-      return ret;
-    },
-  },
-})
-export class SearchLog {
-  @Prop({
-    required: true,
-    enum: ['EXTERNAL_SEARCH', 'LOCAL_SEARCH'],
-    index: true,
-  })
-  operation: 'EXTERNAL_SEARCH' | 'LOCAL_SEARCH';
-
-  @Prop({ required: true, index: true })
+export interface SearchLog {
+  _id?: ObjectId;
+  operation: SearchOperation;
   timestamp: Date;
-
-  @Prop({ required: true })
   query: string;
-
-  @Prop({ required: true })
   resultsCount: number;
-
-  @Prop({ required: true })
   duration: number;
-
-  @Prop({ required: true, index: true })
   success: boolean;
-
-  @Prop()
   error?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export const SearchLogSchema = SchemaFactory.createForClass(SearchLog);
-
-// Compound indexes
-SearchLogSchema.index({ operation: 1, timestamp: -1 });
-SearchLogSchema.index({ success: 1, timestamp: -1 });
+export const searchLogIndexes = [
+  { key: { operation: 1 }, background: true },
+  { key: { timestamp: 1 }, background: true },
+  { key: { success: 1 }, background: true },
+  { key: { operation: 1, timestamp: -1 }, background: true },
+  { key: { success: 1, timestamp: -1 }, background: true },
+];
